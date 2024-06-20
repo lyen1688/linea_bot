@@ -202,8 +202,8 @@
             document.getElementById('lxpl-' + index).textContent = lxpl;
             document.getElementById('rank-' + index).textContent = rank;
         } catch (error) {
-            document.getElementById('lxpl-' + index).textContent = 'Error';
-            document.getElementById('rank-' + index).textContent = 'Error';
+            document.getElementById('lxpl-' + index).textContent = '0';
+            document.getElementById('rank-' + index).textContent = '0';
         }
         try {
             // 获取POH状态
@@ -218,7 +218,7 @@
             document.getElementById('poh-' + index).textContent = poh;
             document.getElementById('poh-' + index).style.color = pohData.poh ? 'green' : 'red';
         } catch (error) {
-            document.getElementById('poh-' + index).textContent = 'Error';
+            document.getElementById('poh-' + index).textContent = '异常';
         }
     }
 
