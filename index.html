@@ -184,6 +184,11 @@
             const lxp = parseInt(lxpHex, 16) / Math.pow(10, 18);
             document.getElementById('lxp-' + index).textContent = lxp.toFixed(2);
 
+        } catch (error) {
+            document.getElementById('lxp-' + index).textContent = 'Error';
+        }
+        try {
+
             // 获取LXP-L值和排名
             const lxplResponse = await fetch(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/linea/getUserPointsSearch?user=${lowercasedAddress}`);
 
@@ -196,7 +201,11 @@
             const rank = lxplData[0].rank_xp;
             document.getElementById('lxpl-' + index).textContent = lxpl;
             document.getElementById('rank-' + index).textContent = rank;
-
+        } catch (error) {
+            document.getElementById('lxpl-' + index).textContent = 'Error';
+            document.getElementById('rank-' + index).textContent = 'Error';
+        }
+        try {
             // 获取POH状态
             const pohResponse = await fetch(`https://linea-xp-poh-api.linea.build/poh/${lowercasedAddress}`);
 
@@ -208,12 +217,7 @@
             const poh = pohData.poh ? '正常' : '异常';
             document.getElementById('poh-' + index).textContent = poh;
             document.getElementById('poh-' + index).style.color = pohData.poh ? 'green' : 'red';
-            
         } catch (error) {
-            console.error('Error fetching or processing data for address:', address, error);
-            document.getElementById('lxp-' + index).textContent = 'Error';
-            document.getElementById('lxpl-' + index).textContent = 'Error';
-            document.getElementById('rank-' + index).textContent = 'Error';
             document.getElementById('poh-' + index).textContent = 'Error';
         }
     }
