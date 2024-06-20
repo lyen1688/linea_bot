@@ -69,7 +69,8 @@
             <textarea class="form-control" placeholder="输入地址列表,每行一个地址" id="address-input"></textarea>
         </div>
         <div class="mb-3">
-            <div class="form-check">
+            <label class="form-label bold-label mb-2">查询方式：</label>
+            <div class="form-check mb-2">
                 <input class="form-check-input" type="radio" name="addressType" id="localQuery" value="local" checked>
                 <label class="form-check-label" for="localQuery">
                     本地查询：直连官方API接口，不经过其他任何服务器！你的IP地址对官方可见！
@@ -109,7 +110,8 @@
     };
 
     queryBtn.addEventListener('click', function() {
-        const addresses = addressInput.value.split('\n').filter(address => address.trim() !== '' && address.startsWith('0x'));
+        let addresses = addressInput.value.split('\n').filter(address => address.trim() !== '' && address.startsWith('0x'));
+        addresses = addresses.map(address => address.toLowerCase());
 
         // 重置累计信息
         totalSummary = {
@@ -130,7 +132,7 @@
 
         let totalSummarySpan = document.createElement('span');
         totalSummarySpan.id = 'total-summary';
-        totalSummarySpan.textContent = '钱包数量：0 LXP总合：0 LXP-L总合：0 POH正常：0 POH异常：0';
+        totalSummarySpan.textContent = '正在查询';
         summaryContainer.appendChild(totalSummarySpan);
 
         // 在结果之前插入累计余额容器
@@ -158,7 +160,12 @@
         resultTable.appendChild(document.createElement('tbody'));
         resultDiv.appendChild(resultTable);
 
-        processBatch(addresses, 0, 5); // 并发处理5个地址
+        const queryType = document.querySelector('input[name="addressType"]:checked').value;
+        if (queryType === 'local') {
+            processBatch(addresses, 0, 5); // 并发处理5个地址
+        } else {
+            processProxyBatches(addresses, 0, 5); // 通过代理批量处理
+        }
     });
 
     async function processBatch(addresses, startIndex, batchSize) {
@@ -254,6 +261,104 @@
         updateTotalSummary();
     }
 
+    async function processProxyBatches(addresses, startIndex, batchSize) {
+        const endIndex = Math.min(startIndex + batchSize, addresses.length);
+        const batch = addresses.slice(startIndex, endIndex);
+
+        await proxyQuery(batch, startIndex);
+
+        if (endIndex < addresses.length) {
+            processProxyBatches(addresses, endIndex, batchSize);
+        } else {
+            updateTotalSummary();
+            addExportButton();
+        }
+    }
+
+    async function proxyQuery(batch, startIndex) {
+    try {
+        const [proxyResponse, ...lxpResponses] = await Promise.all([
+            fetch('https://linea-bot-aqgghflcjv.cn-hongkong.fcapp.run/getWalletInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    wallet_addresses: batch
+                })
+            }),
+            ...batch.map((address, index) => fetchLXPData(address, startIndex + index))
+        ]);
+
+        if (!proxyResponse.ok) {
+            throw new Error(`HTTP error! status: ${proxyResponse.status}`);
+        }
+
+        const data = await proxyResponse.json();
+
+        data.forEach((result, index) => {
+            const actualIndex = startIndex + index;
+            const row = document.getElementById('address-row-' + actualIndex);
+            if (result.error) {
+                row.cells[3].textContent = 'Error';
+                row.cells[4].textContent = 'Error';
+                row.cells[5].textContent = 'Error';
+            } else {
+                row.cells[3].textContent = result.lxp_l;
+                row.cells[4].textContent = result.rank;
+                row.cells[5].textContent = result.poh;
+                row.cells[5].style.color = result.poh === '正常' ? 'green' : 'red';
+                totalSummary.lxplTotal += result.lxp_l;
+                if (result.poh === '正常') {
+                    totalSummary.pohNormal += 1;
+                } else {
+                    totalSummary.pohAbnormal += 1;
+                }
+            }
+        });
+
+        updateTotalSummary();
+        addExportButton();
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function fetchLXPData(address, index) {
+        try {
+            // 获取LXP值
+            const lxpResponse = await fetch('https://rpc.linea.build/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "method":"eth_call",
+                    "params":[{"to":"0xd83af4fbd77f3ab65c3b1dc4b38d7e67aecf599a","data":"0x70a08231000000000000000000000000" + address.slice(2)},"latest"],
+                    "id":48,
+                    "jsonrpc":"2.0"
+                })
+            });
+
+            if (!lxpResponse.ok) {
+                throw new Error(`HTTP error! status: ${lxpResponse.status}`);
+            }
+
+            const lxpData = await lxpResponse.json();
+            const lxpHex = lxpData.result;
+            const lxp = parseInt(lxpHex, 16) / Math.pow(10, 18);
+            document.getElementById('lxp-' + index).textContent = lxp.toFixed(0);
+            totalSummary.lxpTotal += lxp;
+
+            // 实时更新累计信息
+            updateTotalSummary();
+
+        } catch (error) {
+            document.getElementById('lxp-' + index).textContent = 'Error';
+        }
+    }
+
     function updateTotalSummary() {
         document.getElementById('total-summary').innerHTML = `
         钱包数量：<span style="color: green;">${totalSummary.walletCount}</span> 个 | 
@@ -277,7 +382,7 @@
 
     function exportToCSV() {
         const addresses = addressInput.value.split('\n').filter(address => address.trim() !== '' && address.startsWith('0x'));
-        let csvContent = "data:text/csv;charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LXP-L排名,POH状态\n";
+        let csvContent = "data:text/csv; charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LXP-L排名,POH状态\n";
 
         addresses.forEach(function(address, index) {
             const lxp = document.getElementById('lxp-' + index).textContent;
