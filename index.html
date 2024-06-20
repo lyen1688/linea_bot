@@ -255,7 +255,12 @@
     }
 
     function updateTotalSummary() {
-        document.getElementById('total-summary').textContent = `钱包数量：${totalSummary.walletCount} LXP总合：${totalSummary.lxpTotal.toFixed(2)} LXP-L总合：${totalSummary.lxplTotal} POH正常：${totalSummary.pohNormal} POH异常：${totalSummary.pohAbnormal}`;
+        document.getElementById('total-summary').innerHTML = `
+        钱包数量：<span style="color: green;">${totalSummary.walletCount}</span> 个 | 
+        LXP：<span style="color: green;">${totalSummary.lxpTotal.toFixed(2)}</span> 分 | 
+        LXP-L：<span style="color: green;">${totalSummary.lxplTotal}</span> 分 | 
+        POH正常：<span style="color: green;">${totalSummary.pohNormal}</span> 个 | 
+        POH异常：<span style="color: red;">${totalSummary.pohAbnormal}</span> 个`;
     }
 
     function addExportButton() {
