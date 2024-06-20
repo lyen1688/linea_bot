@@ -63,6 +63,8 @@
         <h1>Linea 数据批量查询</h1>
         <div class="info">
             <p>支持Linea两种不同的查询模式，更快更安全！</p>
+            <p>前后端源代码已开源，任何人都可以自己部署：<a href="https://github.com/lyen1688/linea_bot/" target="_blank">github</a></p>
+            <p>重要提示：我们不会收集任何用户信息，更不会去举报女巫。你可以不用，但别诋毁。</p>
             <p><a href="https://ybot.io" target="_blank">Runes符文批量铸造：ybot.io&nbsp;<i class="bi bi-box-arrow-up-right"></i></a>（全网铸造成本最低，支持无限加速！）</p>
         </div>
         <div class="mb-3">
@@ -126,17 +128,20 @@
         resultDiv.innerHTML = ''; 
 
         // 创建累计余额和导出按钮的容器
-        let summaryContainer = document.createElement('div');
-        summaryContainer.className = 'd-flex justify-content-between align-items-center mb-3 mt-4';
-        summaryContainer.id = 'total-summary-container';
+        let summaryContainer = document.getElementById('total-summary-container');
+        if (!summaryContainer) {
+            summaryContainer = document.createElement('div');
+            summaryContainer.className = 'd-flex justify-content-between align-items-center mb-3 mt-4';
+            summaryContainer.id = 'total-summary-container';
+            resultDiv.parentNode.insertBefore(summaryContainer, resultDiv);
+        } else {
+            summaryContainer.innerHTML = ''; // 清空之前的内容
+        }
 
         let totalSummarySpan = document.createElement('span');
         totalSummarySpan.id = 'total-summary';
-        totalSummarySpan.textContent = '正在查询';
+        totalSummarySpan.textContent = '正在查询...';
         summaryContainer.appendChild(totalSummarySpan);
-
-        // 在结果之前插入累计余额容器
-        resultDiv.parentNode.insertBefore(summaryContainer, resultDiv);
 
         let resultTable = document.createElement('table');
         resultTable.className = 'table table-striped';
