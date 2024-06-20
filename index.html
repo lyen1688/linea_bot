@@ -99,8 +99,26 @@
     const queryBtn = document.getElementById('query-btn');
     const resultDiv = document.getElementById('result');
 
+    // 初始化累计信息
+    let totalSummary = {
+        walletCount: 0,
+        lxpTotal: 0,
+        lxplTotal: 0,
+        pohNormal: 0,
+        pohAbnormal: 0
+    };
+
     queryBtn.addEventListener('click', function() {
         const addresses = addressInput.value.split('\n').filter(address => address.trim() !== '' && address.startsWith('0x'));
+
+        // 重置累计信息
+        totalSummary = {
+            walletCount: addresses.length,
+            lxpTotal: 0,
+            lxplTotal: 0,
+            pohNormal: 0,
+            pohAbnormal: 0
+        };
 
         // 清空上一次的结果
         resultDiv.innerHTML = ''; 
@@ -112,7 +130,7 @@
 
         let totalSummarySpan = document.createElement('span');
         totalSummarySpan.id = 'total-summary';
-        totalSummarySpan.textContent = '状态查询：正在查询...';
+        totalSummarySpan.textContent = '钱包数量：0 LXP总合：0 LXP-L总合：0 POH正常：0 POH异常：0';
         summaryContainer.appendChild(totalSummarySpan);
 
         // 在结果之前插入累计余额容器
@@ -154,6 +172,7 @@
             processBatch(addresses, endIndex, batchSize);
         } else {
             updateTotalSummary();
+            addExportButton();
         }
     }
 
@@ -183,12 +202,13 @@
             const lxpHex = lxpData.result;
             const lxp = parseInt(lxpHex, 16) / Math.pow(10, 18);
             document.getElementById('lxp-' + index).textContent = lxp.toFixed(2);
+            totalSummary.lxpTotal += lxp;
 
         } catch (error) {
             document.getElementById('lxp-' + index).textContent = 'Error';
         }
-        try {
 
+        try {
             // 获取LXP-L值和排名
             const lxplResponse = await fetch(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/linea/getUserPointsSearch?user=${lowercasedAddress}`);
 
@@ -201,10 +221,13 @@
             const rank = lxplData[0].rank_xp;
             document.getElementById('lxpl-' + index).textContent = lxpl;
             document.getElementById('rank-' + index).textContent = rank;
+            totalSummary.lxplTotal += lxpl;
+
         } catch (error) {
             document.getElementById('lxpl-' + index).textContent = '0';
             document.getElementById('rank-' + index).textContent = '0';
         }
+
         try {
             // 获取POH状态
             const pohResponse = await fetch(`https://linea-xp-poh-api.linea.build/poh/${lowercasedAddress}`);
@@ -217,21 +240,22 @@
             const poh = pohData.poh ? '正常' : '异常';
             document.getElementById('poh-' + index).textContent = poh;
             document.getElementById('poh-' + index).style.color = pohData.poh ? 'green' : 'red';
+            if (pohData.poh) {
+                totalSummary.pohNormal += 1;
+            } else {
+                totalSummary.pohAbnormal += 1;
+            }
         } catch (error) {
             document.getElementById('poh-' + index).textContent = '异常';
+            totalSummary.pohAbnormal += 1;
         }
+
+        // 实时更新累计信息
+        updateTotalSummary();
     }
 
     function updateTotalSummary() {
-        let totalErrors = 0;
-        const errorElements = document.querySelectorAll('[id^=poh-]');
-        errorElements.forEach(element => {
-            if (element.textContent == "Error") {
-                totalErrors += 1;
-            }
-        });
-        document.getElementById('total-summary').textContent = '查询完成: ' + totalErrors + ' 个地址出错';
-        addExportButton();
+        document.getElementById('total-summary').textContent = `钱包数量：${totalSummary.walletCount} LXP总合：${totalSummary.lxpTotal.toFixed(2)} LXP-L总合：${totalSummary.lxplTotal} POH正常：${totalSummary.pohNormal} POH异常：${totalSummary.pohAbnormal}`;
     }
 
     function addExportButton() {
