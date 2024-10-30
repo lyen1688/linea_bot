@@ -283,7 +283,7 @@
     async function proxyQuery(batch, startIndex) {
     try {
         const [proxyResponse, ...lxpResponses] = await Promise.all([
-            fetch('https://linea-bot-aqgghflcjv.cn-hongkong.fcapp.run/getWalletInfo', {
+            fetch('https://linea-bot-aqgghflcjv.cn-hangzhou.fcapp.run/getWalletInfo', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
