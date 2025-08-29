@@ -1,410 +1,497 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linea 数据批量查询</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 1000px;
-            margin-top: 50px;
-            padding: 30px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .info {
-            margin-bottom: 30px;
-        }
-        textarea {
-            width: 100%;
-            height: 200px;
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            resize: vertical;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #result {
-            margin-top: 30px;
-        }
-        .summary {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Linea 数据批量查询</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"/>
+  <style>
+    body { background-color:#f8f9fa; }
+    .container{ max-width:1000px; margin-top:50px; padding:30px; background:#fff; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,.1); }
+    h1{ color:#333; margin-bottom:20px; text-shadow:2px 2px 4px rgba(0,0,0,.1); }
+    .info{ margin-bottom:30px; }
+    textarea{ width:100%; height:200px; margin-bottom:20px; padding:10px; border:1px solid #ced4da; border-radius:5px; resize:vertical; }
+    button{ padding:10px 20px; font-size:16px; border-radius:5px; background:#007bff; color:#fff; border:none; cursor:pointer; transition:background-color .3s; }
+    button:hover{ background:#0056b3; }
+    #result{ margin-top:30px; }
+    .summary{ font-size:18px; font-weight:bold; margin-bottom:20px; }
+    .text-green{ color:green; } .text-red{ color:red; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Linea 数据批量查询</h1>
-        <div class="info">
-            <p>支持Linea两种不同的查询模式，更快更安全！</p>
-            <p>前后端源代码已开源，任何人都可以自己部署：<a href="https://github.com/lyen1688/linea_bot/" target="_blank">github</a></p>
-            <p>重要提示：我们不会收集任何用户信息，更不会去举报女巫。你可以不用，但别诋毁。</p>
-            <p><a href="https://ybot.io" target="_blank">Runes符文批量铸造：ybot.io&nbsp;<i class="bi bi-box-arrow-up-right"></i></a>（全网铸造成本最低，支持无限加速！）</p>
-        </div>
-        <div class="mb-3">
-            <textarea class="form-control" placeholder="输入地址列表,每行一个地址" id="address-input"></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label bold-label mb-2">查询方式：</label>
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="radio" name="addressType" id="localQuery" value="local" checked>
-                <label class="form-check-label" for="localQuery">
-                    本地查询：直连官方API接口，不经过其他任何服务器！你的IP地址对官方可见！
-                </label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="addressType" id="proxyQuery" value="proxy">
-                <label class="form-check-label" for="proxyQuery">
-                    代理查询：通过统一的代理服务器查询，上百万地址都同一个IP！你的IP地址官方不可见！
-                </label>
-            </div>
-        </div>
-        <div class="d-grid">
-            <button class="btn btn-primary" type="button" id="query-btn">
-                <i class="bi bi-search"></i> 批量查询
-            </button>
-        </div>
-        <div id="result"></div>
-        <p class="author-info">
-            by：老叶1999.eth &nbsp;&nbsp;作者推特：<a href="https://twitter.com/1999_eth" target="_blank">https://twitter.com/1999_eth</a>
-        </p>
+  <div class="container">
+    <h1>Linea 数据批量查询</h1>
+    <div class="info">
+      <p>支持Linea两种不同的查询模式，更快更安全！</p>
+      <p>前后端源代码已开源，任何人都可以自己部署：<a href="https://github.com/lyen1688/linea_bot/" target="_blank">github</a></p>
+      <p>重要提示：我们不会收集任何用户信息，更不会去举报女巫。你可以不用，但别诋毁。</p>
+      <p><a href="https://ybot.io" target="_blank">Runes符文批量铸造：ybot.io&nbsp;<i class="bi bi-box-arrow-up-right"></i></a>（全网铸造成本最低，支持无限加速！）</p>
     </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
+    <div class="mb-3">
+      <textarea class="form-control" placeholder="输入地址列表,每行一个地址" id="address-input"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label bold-label mb-2">查询方式：</label>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="radio" name="addressType" id="localQuery" value="local" checked>
+        <label class="form-check-label" for="localQuery">
+          本地查询：直连官方API接口，不经过其他任何服务器！你的IP地址对官方可见！
+        </label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="addressType" id="proxyQuery" value="proxy">
+        <label class="form-check-label" for="proxyQuery">
+          代理查询：通过统一的代理服务器查询，上百万地址都同一个IP！你的IP地址官方不可见！
+        </label>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <button class="btn btn-primary" type="button" id="query-btn">
+        <i class="bi bi-search"></i> 批量查询
+      </button>
+    </div>
+
+    <div id="result"></div>
+    <p class="author-info">
+      by：老叶1999.eth &nbsp;&nbsp;作者推特：<a href="https://twitter.com/1999_eth" target="_blank">https://twitter.com/1999_eth</a>
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- 新增：ethers.js 用于 ABI 编解码 Multicall3 -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <script>
     const addressInput = document.getElementById('address-input');
     const queryBtn = document.getElementById('query-btn');
     const resultDiv = document.getElementById('result');
 
-    // 初始化累计信息
+    // 常量：代币与Multicall
+    const RPC_URL = 'https://rpc.linea.build/';
+    const MULTICALL3 = '0xca11bde05977b3631167028862be2a173976ca11'; // Multicall3
+    const TOKEN_E158 = '0xE158CaCCe6f5713f5739A7d7AF0dB60116187687'; // LAM代币
+    const DECIMALS_E158 = 18; // 假设18位，如需严谨可再加一次性查询decimals
+    const TOKEN_LXP = '0xd83af4fbd77f3ab65c3b1dc4b38d7e67aecf599a'; // LXP代币
+    const DECIMALS_LXP = 18;
+
+    // ethers Interface（只放需要的函数签名）
+    const ifaceERC20 = new ethers.utils.Interface([
+      'function balanceOf(address) view returns (uint256)'
+    ]);
+    const ifaceMC3 = new ethers.utils.Interface([
+      'function aggregate3(tuple(address target,bool allowFailure,bytes callData)[] calls) payable returns (tuple(bool success, bytes returnData)[] returnData)'
+    ]);
+
+    // LAM等级对应表（原始值 * 10^12）
+    const LAM_TIERS = [
+      { tier: 1, value: 1491 },
+      { tier: 2, value: 1640 },
+      { tier: 3, value: 1789 },
+      { tier: 4, value: 1938 },
+      { tier: 5, value: 2461 },
+      { tier: 6, value: 2640 },
+      { tier: 7, value: 2684 },
+      { tier: 8, value: 3132 },
+      { tier: 9, value: 4474 },
+      { tier: 10, value: 4847 },
+      { tier: 11, value: 7605 },
+      { tier: 12, value: 8053 },
+      { tier: 13, value: 8547 },
+      { tier: 14, value: 8724 },
+      { tier: 15, value: 9209 }
+    ];
+
+    // 根据LAM余额判断等级
+    function getLAMTier(lamValue) {
+      if (!lamValue || lamValue <= 0) return '';
+      
+      // 找到最接近的等级
+      for (let i = 0; i < LAM_TIERS.length; i++) {
+        if (lamValue <= LAM_TIERS[i].value) {
+          return LAM_TIERS[i].tier;
+        }
+      }
+      // 如果超过最高等级，返回15
+      return 15;
+    }
+
+    // 累计信息
     let totalSummary = {
-        walletCount: 0,
+      walletCount: 0,
+      lxpTotal: 0,
+      lxplTotal: 0,
+      pohNormal: 0,
+      pohAbnormal: 0
+    };
+
+    queryBtn.addEventListener('click', function () {
+      let addresses = addressInput.value
+        .split('\n')
+        .map(s => s.trim())
+        .filter(address => address && address.startsWith('0x'))
+        .map(a => a.toLowerCase());
+
+      // 重置累计
+      totalSummary = {
+        walletCount: addresses.length,
         lxpTotal: 0,
         lxplTotal: 0,
         pohNormal: 0,
         pohAbnormal: 0
-    };
+      };
 
-    queryBtn.addEventListener('click', function() {
-        let addresses = addressInput.value.split('\n').filter(address => address.trim() !== '' && address.startsWith('0x'));
-        addresses = addresses.map(address => address.toLowerCase());
+      // 清空结果
+      resultDiv.innerHTML = '';
 
-        // 重置累计信息
-        totalSummary = {
-            walletCount: addresses.length,
-            lxpTotal: 0,
-            lxplTotal: 0,
-            pohNormal: 0,
-            pohAbnormal: 0
-        };
+      // 累计栏容器
+      let summaryContainer = document.getElementById('total-summary-container');
+      if (!summaryContainer) {
+        summaryContainer = document.createElement('div');
+        summaryContainer.className = 'd-flex justify-content-between align-items-center mb-3 mt-4';
+        summaryContainer.id = 'total-summary-container';
+        resultDiv.parentNode.insertBefore(summaryContainer, resultDiv);
+      } else {
+        summaryContainer.innerHTML = '';
+      }
 
-        // 清空上一次的结果
-        resultDiv.innerHTML = ''; 
+      let totalSummarySpan = document.createElement('span');
+      totalSummarySpan.id = 'total-summary';
+      totalSummarySpan.textContent = '正在查询...';
+      summaryContainer.appendChild(totalSummarySpan);
 
-        // 创建累计余额和导出按钮的容器
-        let summaryContainer = document.getElementById('total-summary-container');
-        if (!summaryContainer) {
-            summaryContainer = document.createElement('div');
-            summaryContainer.className = 'd-flex justify-content-between align-items-center mb-3 mt-4';
-            summaryContainer.id = 'total-summary-container';
-            resultDiv.parentNode.insertBefore(summaryContainer, resultDiv);
-        } else {
-            summaryContainer.innerHTML = ''; // 清空之前的内容
-        }
+      // 表头：新增 “E158余额”
+      let resultTable = document.createElement('table');
+      resultTable.className = 'table table-striped';
+      resultTable.innerHTML =
+        '<thead><tr>' +
+        '<th>编号</th><th>钱包地址</th><th>LXP</th><th>LXP-L</th><th>LXP-L排名</th><th>LAM余额</th><th>等级</th><th>POH状态</th>' +
+        '</tr></thead><tbody></tbody>';
 
-        let totalSummarySpan = document.createElement('span');
-        totalSummarySpan.id = 'total-summary';
-        totalSummarySpan.textContent = '正在查询...';
-        summaryContainer.appendChild(totalSummarySpan);
+      const tbody = resultTable.querySelector('tbody');
 
-        let resultTable = document.createElement('table');
-        resultTable.className = 'table table-striped';
-        resultTable.innerHTML = '<thead><tr><th>编号</th><th>钱包地址</th><th>LXP</th><th>LXP-L</th><th>LXP-L排名</th><th>POH状态</th></thead><tbody>';
+      addresses.forEach((address, index) => {
+        const row = tbody.insertRow(-1);
+        row.id = 'address-row-' + index;
 
-        addresses.forEach((address, index) => {
-            let row = resultTable.insertRow(-1);
-            row.id = 'address-row-' + index;
-            row.insertCell(0).textContent = index + 1;
-            row.insertCell(1).textContent = address;
-            row.insertCell(2).id = 'lxp-' + index;
-            row.insertCell(3).id = 'lxpl-' + index;
-            row.insertCell(4).id = 'rank-' + index;
-            row.insertCell(5).id = 'poh-' + index;
-            row.cells[2].textContent = '正在查询...';
-            row.cells[3].textContent = '正在查询...';
-            row.cells[4].textContent = '正在查询...';
-            row.cells[5].textContent = '正在查询...';
-        });
+        row.insertCell(0).textContent = index + 1;              // 编号
+        row.insertCell(1).textContent = address;                 // 地址
 
-        resultTable.appendChild(document.createElement('tbody'));
-        resultDiv.appendChild(resultTable);
+        const lxpTd = row.insertCell(2); lxpTd.id   = 'lxp-' + index;
+        const lxplTd= row.insertCell(3); lxplTd.id  = 'lxpl-' + index;
+        const rankTd= row.insertCell(4); rankTd.id  = 'rank-' + index;
+        const e158Td= row.insertCell(5); e158Td.id  = 'e158-' + index; // LAM余额列
+        const tierTd= row.insertCell(6); tierTd.id  = 'tier-' + index; // 等级列
+        const pohTd = row.insertCell(7); pohTd.id   = 'poh-' + index;
 
-        const queryType = document.querySelector('input[name="addressType"]:checked').value;
-        if (queryType === 'local') {
-            processBatch(addresses, 0, 5); // 并发处理5个地址
-        } else {
-            processProxyBatches(addresses, 0, 5); // 通过代理批量处理
-        }
+        lxpTd.textContent = '正在查询...';
+        lxplTd.textContent = '正在查询...';
+        rankTd.textContent = '正在查询...';
+        e158Td.textContent = '正在查询...';
+        tierTd.textContent = '正在查询...';
+        pohTd.textContent = '正在查询...';
+      });
+
+      resultDiv.appendChild(resultTable);
+
+      const queryType = document.querySelector('input[name="addressType"]:checked').value;
+      if (queryType === 'local') {
+        processBatch(addresses, 0, 5); // 并发5
+      } else {
+        processProxyBatches(addresses, 0, 5);
+      }
     });
 
+    // —— 本地模式 —— //
     async function processBatch(addresses, startIndex, batchSize) {
-        const endIndex = Math.min(startIndex + batchSize, addresses.length);
-        const batch = addresses.slice(startIndex, endIndex);
+      const endIndex = Math.min(startIndex + batchSize, addresses.length);
+      const batch = addresses.slice(startIndex, endIndex);
 
-        const requests = batch.map((address, index) => fetchAddressData(address, startIndex + index));
-        await Promise.all(requests);
+      // 并发：LXP批量查询 + LAM批量查询 + 其他单个查询
+      const lxpBatchReq = fetchLXPBalancesByMulticall(batch, startIndex);
+      const e158BatchReq = fetchE158BalancesByMulticall(batch, startIndex);
+      const otherRequestsPerAddress = batch.map((address, i) => fetchOtherAddressData(address, startIndex + i));
 
-        if (endIndex < addresses.length) {
-            processBatch(addresses, endIndex, batchSize);
-        } else {
-            updateTotalSummary();
-            addExportButton();
-        }
-    }
+      await Promise.all([lxpBatchReq, e158BatchReq, ...otherRequestsPerAddress]);
 
-    async function fetchAddressData(address, index) {
-        const lowercasedAddress = address.toLowerCase();
-
-        try {
-            // 获取LXP值
-            const lxpResponse = await fetch('https://rpc.linea.build/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "method":"eth_call",
-                    "params":[{"to":"0xd83af4fbd77f3ab65c3b1dc4b38d7e67aecf599a","data":"0x70a08231000000000000000000000000" + lowercasedAddress.slice(2)},"latest"],
-                    "id":48,
-                    "jsonrpc":"2.0"
-                })
-            });
-
-            if (!lxpResponse.ok) {
-                throw new Error(`HTTP error! status: ${lxpResponse.status}`);
-            }
-
-            const lxpData = await lxpResponse.json();
-            const lxpHex = lxpData.result;
-            const lxp = parseInt(lxpHex, 16) / Math.pow(10, 18);
-            document.getElementById('lxp-' + index).textContent = lxp.toFixed(2);
-            totalSummary.lxpTotal += lxp;
-
-        } catch (error) {
-            document.getElementById('lxp-' + index).textContent = 'Error';
-        }
-
-        try {
-            // 获取LXP-L值和排名
-            const lxplResponse = await fetch(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/linea/getUserPointsSearch?user=${lowercasedAddress}`);
-
-            if (!lxplResponse.ok) {
-                throw new Error(`HTTP error! status: ${lxplResponse.status}`);
-            }
-
-            const lxplData = await lxplResponse.json();
-            const lxpl = lxplData[0].xp;
-            const rank = lxplData[0].rank_xp;
-            document.getElementById('lxpl-' + index).textContent = lxpl;
-            document.getElementById('rank-' + index).textContent = rank;
-            totalSummary.lxplTotal += lxpl;
-
-        } catch (error) {
-            document.getElementById('lxpl-' + index).textContent = '0';
-            document.getElementById('rank-' + index).textContent = '0';
-        }
-
-        try {
-            // 获取POH状态
-            const pohResponse = await fetch(`https://linea-xp-poh-api.linea.build/poh/${lowercasedAddress}`);
-
-            if (!pohResponse.ok) {
-                throw new Error(`HTTP error! status: ${pohResponse.status}`);
-            }
-
-            const pohData = await pohResponse.json();
-            const poh = pohData.poh ? '正常' : '异常';
-            document.getElementById('poh-' + index).textContent = poh;
-            document.getElementById('poh-' + index).style.color = pohData.poh ? 'green' : 'red';
-            if (pohData.poh) {
-                totalSummary.pohNormal += 1;
-            } else {
-                totalSummary.pohAbnormal += 1;
-            }
-        } catch (error) {
-            document.getElementById('poh-' + index).textContent = '异常';
-            totalSummary.pohAbnormal += 1;
-        }
-
-        // 实时更新累计信息
+      if (endIndex < addresses.length) {
+        processBatch(addresses, endIndex, batchSize);
+      } else {
         updateTotalSummary();
+        addExportButton();
+      }
     }
 
+    // 新增：使用 Multicall3 批量查询本批地址的 LXP 余额
+    async function fetchLXPBalancesByMulticall(batchAddresses, startIndex) {
+      try {
+        // 构造 calls: 对LXP代币合约的 balanceOf(address)
+        const calls = batchAddresses.map(addr => ({
+          target: TOKEN_LXP,
+          allowFailure: true,
+          callData: ifaceERC20.encodeFunctionData('balanceOf', [addr])
+        }));
+
+        const data = ifaceMC3.encodeFunctionData('aggregate3', [calls]);
+
+        const resp = await fetch(RPC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'eth_call',
+            params: [{ to: MULTICALL3, data }, 'latest'],
+            id: 889,
+            jsonrpc: '2.0'
+          })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const { result } = await resp.json();
+
+        const decoded = ifaceMC3.decodeFunctionResult('aggregate3', result)[0]; // returnData[]
+        decoded.forEach((r, i) => {
+          const actualIndex = startIndex + i;
+          const cell = document.getElementById('lxp-' + actualIndex);
+          if (!cell) return;
+
+          if (!r.success) {
+            cell.textContent = 'Error';
+            return;
+          }
+          try {
+            const [raw] = ifaceERC20.decodeFunctionResult('balanceOf', r.returnData);
+            const val = Number(ethers.utils.formatUnits(raw, DECIMALS_LXP));
+            cell.textContent = isFinite(val) ? val.toFixed(2) : '0.00';
+            totalSummary.lxpTotal += isFinite(val) ? val : 0;
+          } catch {
+            cell.textContent = 'Error';
+          }
+        });
+        updateTotalSummary();
+      } catch (e) {
+        // 整批失败则把批内单元格标注为 Error
+        batchAddresses.forEach((_, i) => {
+          const cell = document.getElementById('lxp-' + (startIndex + i));
+          if (cell) cell.textContent = 'Error';
+        });
+      }
+    }
+
+    // 单地址其他数据查询（LXP-L、排名、POH）
+    async function fetchOtherAddressData(address, index) {
+      const lower = address.toLowerCase();
+
+      // 1) LXP-L & 排名
+      try {
+        const resp = await fetch(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/linea/getUserPointsSearch?user=${lower}`);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const lxpl = (data && data[0] && data[0].xp) || 0;
+        const rank = (data && data[0] && data[0].rank_xp) || 0;
+        document.getElementById('lxpl-' + index).textContent = lxpl;
+        document.getElementById('rank-' + index).textContent = rank;
+        totalSummary.lxplTotal += Number(lxpl) || 0;
+      } catch(e) {
+        document.getElementById('lxpl-' + index).textContent = '0';
+        document.getElementById('rank-' + index).textContent = '0';
+      }
+
+      // 2) POH
+      try {
+        const resp = await fetch(`https://linea-xp-poh-api.linea.build/poh/${lower}`);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const ok = !!data.poh;
+        const td = document.getElementById('poh-' + index);
+        td.textContent = ok ? '正常' : '异常';
+        td.className = ok ? 'text-green' : 'text-red';
+        if (ok) totalSummary.pohNormal += 1; else totalSummary.pohAbnormal += 1;
+      } catch(e) {
+        const td = document.getElementById('poh-' + index);
+        td.textContent = '异常';
+        td.className = 'text-red';
+        totalSummary.pohAbnormal += 1;
+      }
+
+      updateTotalSummary();
+    }
+
+    // 新增：使用 Multicall3 批量查询本批地址的 E158 余额
+    async function fetchE158BalancesByMulticall(batchAddresses, startIndex) {
+      try {
+        // 构造 calls: 对同一代币合约 TOKEN_E158 的 balanceOf(address)
+        const calls = batchAddresses.map(addr => ({
+          target: TOKEN_E158,
+          allowFailure: true,
+          callData: ifaceERC20.encodeFunctionData('balanceOf', [addr])
+        }));
+
+        const data = ifaceMC3.encodeFunctionData('aggregate3', [calls]);
+
+        const resp = await fetch(RPC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'eth_call',
+            params: [{ to: MULTICALL3, data }, 'latest'],
+            id: 888,
+            jsonrpc: '2.0'
+          })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const { result } = await resp.json();
+
+        const decoded = ifaceMC3.decodeFunctionResult('aggregate3', result)[0]; // returnData[]
+        decoded.forEach((r, i) => {
+          const actualIndex = startIndex + i;
+          const cell = document.getElementById('e158-' + actualIndex);
+          const tierCell = document.getElementById('tier-' + actualIndex);
+          if (!cell) return;
+
+          if (!r.success) {
+            cell.textContent = 'Error';
+            if (tierCell) tierCell.textContent = '';
+            return;
+          }
+          try {
+            const [raw] = ifaceERC20.decodeFunctionResult('balanceOf', r.returnData);
+            const val = Number(ethers.utils.formatUnits(raw, DECIMALS_E158));
+            if (isFinite(val) && val > 0) {
+              // 18位精度只显示前12位，去掉后6位
+              const multiplied = val * Math.pow(10, 12);
+              const lamValue = Math.floor(multiplied);
+              cell.textContent = lamValue.toString();
+              // 设置对应的等级
+              if (tierCell) {
+                const tier = getLAMTier(lamValue);
+                tierCell.textContent = tier ? `Tier${tier}` : '';
+              }
+            } else {
+              cell.textContent = '0';
+              if (tierCell) tierCell.textContent = '';
+            }
+          } catch {
+            cell.textContent = 'Error';
+            if (tierCell) tierCell.textContent = '';
+          }
+        });
+      } catch (e) {
+        // 整批失败则把批内单元格标注为 Error
+        batchAddresses.forEach((_, i) => {
+          const cell = document.getElementById('e158-' + (startIndex + i));
+          if (cell) cell.textContent = 'Error';
+        });
+      }
+    }
+
+    // —— 代理模式 —— //
     async function processProxyBatches(addresses, startIndex, batchSize) {
-        const endIndex = Math.min(startIndex + batchSize, addresses.length);
-        const batch = addresses.slice(startIndex, endIndex);
+      const endIndex = Math.min(startIndex + batchSize, addresses.length);
+      const batch = addresses.slice(startIndex, endIndex);
 
-        await proxyQuery(batch, startIndex);
+      // 代理接口 + 批量 LXP + 批量 LAM
+      await Promise.all([
+        proxyQuery(batch, startIndex),
+        fetchLXPBalancesByMulticall(batch, startIndex),
+        fetchE158BalancesByMulticall(batch, startIndex)
+      ]);
 
-        if (endIndex < addresses.length) {
-            processProxyBatches(addresses, endIndex, batchSize);
-        } else {
-            updateTotalSummary();
-            addExportButton();
-        }
+      if (endIndex < addresses.length) {
+        processProxyBatches(addresses, endIndex, batchSize);
+      } else {
+        updateTotalSummary();
+        addExportButton();
+      }
     }
 
     async function proxyQuery(batch, startIndex) {
-    try {
-        const [proxyResponse, ...lxpResponses] = await Promise.all([
-            fetch('https://linea-bot-aqgghflcjv.cn-hangzhou.fcapp.run/getWalletInfo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    wallet_addresses: batch
-                })
-            }),
-            ...batch.map((address, index) => fetchLXPData(address, startIndex + index))
-        ]);
+      try {
+        const proxyResponse = await fetch('https://linea-bot-aqgghflcjv.cn-hangzhou.fcapp.run/getWalletInfo', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet_addresses: batch })
+        });
 
-        if (!proxyResponse.ok) {
-            throw new Error(`HTTP error! status: ${proxyResponse.status}`);
-        }
-
+        if (!proxyResponse.ok) throw new Error('HTTP ' + proxyResponse.status);
         const data = await proxyResponse.json();
 
-        data.forEach((result, index) => {
-            const actualIndex = startIndex + index;
-            const row = document.getElementById('address-row-' + actualIndex);
-            if (result.error) {
-                row.cells[3].textContent = 'Error';
-                row.cells[4].textContent = 'Error';
-                row.cells[5].textContent = 'Error';
-            } else {
-                row.cells[3].textContent = result.lxp_l;
-                row.cells[4].textContent = result.rank;
-                row.cells[5].textContent = result.poh;
-                row.cells[5].style.color = result.poh === '正常' ? 'green' : 'red';
-                totalSummary.lxplTotal += result.lxp_l;
-                if (result.poh === '正常') {
-                    totalSummary.pohNormal += 1;
-                } else {
-                    totalSummary.pohAbnormal += 1;
-                }
+        data.forEach((result, i) => {
+          const actualIndex = startIndex + i;
+
+          const lxplTd = document.getElementById('lxpl-' + actualIndex);
+          const rankTd = document.getElementById('rank-' + actualIndex);
+          const pohTd  = document.getElementById('poh-' + actualIndex);
+
+          if (result.error) {
+            if (lxplTd) lxplTd.textContent = 'Error';
+            if (rankTd) rankTd.textContent = 'Error';
+            if (pohTd)  { pohTd.textContent = 'Error'; pohTd.className = ''; }
+          } else {
+            if (lxplTd) { lxplTd.textContent = result.lxp_l; totalSummary.lxplTotal += Number(result.lxp_l) || 0; }
+            if (rankTd) rankTd.textContent = result.rank;
+            if (pohTd)  {
+              pohTd.textContent = result.poh;
+              const isOk = result.poh === '正常';
+              pohTd.className = isOk ? 'text-green' : 'text-red';
+              if (isOk) totalSummary.pohNormal += 1; else totalSummary.pohAbnormal += 1;
             }
+          }
         });
 
         updateTotalSummary();
         addExportButton();
-
-        } catch (error) {
-            console.error('Error:', error);
-        }
+      } catch (e) {
+        console.error('Proxy error:', e);
+      }
     }
 
-    async function fetchLXPData(address, index) {
-        try {
-            // 获取LXP值
-            const lxpResponse = await fetch('https://rpc.linea.build/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "method":"eth_call",
-                    "params":[{"to":"0xd83af4fbd77f3ab65c3b1dc4b38d7e67aecf599a","data":"0x70a08231000000000000000000000000" + address.slice(2)},"latest"],
-                    "id":48,
-                    "jsonrpc":"2.0"
-                })
-            });
 
-            if (!lxpResponse.ok) {
-                throw new Error(`HTTP error! status: ${lxpResponse.status}`);
-            }
 
-            const lxpData = await lxpResponse.json();
-            const lxpHex = lxpData.result;
-            const lxp = parseInt(lxpHex, 16) / Math.pow(10, 18);
-            document.getElementById('lxp-' + index).textContent = lxp.toFixed(0);
-            totalSummary.lxpTotal += lxp;
-
-            // 实时更新累计信息
-            updateTotalSummary();
-
-        } catch (error) {
-            document.getElementById('lxp-' + index).textContent = 'Error';
-        }
-    }
-
+    // UI：累计 + 导出
     function updateTotalSummary() {
-        document.getElementById('total-summary').innerHTML = `
-        钱包数量：<span style="color: green;">${totalSummary.walletCount}</span> 个 | 
-        LXP：<span style="color: green;">${totalSummary.lxpTotal.toFixed(2)}</span> 分 | 
-        LXP-L：<span style="color: green;">${totalSummary.lxplTotal}</span> 分 | 
-        POH正常：<span style="color: green;">${totalSummary.pohNormal}</span> 个 | 
-        POH异常：<span style="color: red;">${totalSummary.pohAbnormal}</span> 个`;
+      const el = document.getElementById('total-summary');
+      if (!el) return;
+      el.innerHTML = `
+        钱包数量：<span class="text-green">${totalSummary.walletCount}</span> 个 |
+        LXP：<span class="text-green">${totalSummary.lxpTotal.toFixed(2)}</span> 分 |
+        LXP-L：<span class="text-green">${totalSummary.lxplTotal}</span> 分 |
+        POH正常：<span class="text-green">${totalSummary.pohNormal}</span> 个 |
+        POH异常：<span class="text-red">${totalSummary.pohAbnormal}</span> 个
+      `;
     }
 
     function addExportButton() {
-        let exportBtn = document.getElementById('export-btn');
-        if (!exportBtn) {
-            exportBtn = document.createElement('button');
-            exportBtn.className = 'btn btn-secondary';
-            exportBtn.id = 'export-btn';
-            exportBtn.textContent = '导出表格';
-            exportBtn.addEventListener('click', exportToCSV);
-            document.getElementById('total-summary-container').appendChild(exportBtn);
-        }
+      let exportBtn = document.getElementById('export-btn');
+      if (!exportBtn) {
+        exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-secondary';
+        exportBtn.id = 'export-btn';
+        exportBtn.textContent = '导出表格';
+        exportBtn.addEventListener('click', exportToCSV);
+        document.getElementById('total-summary-container').appendChild(exportBtn);
+      }
     }
 
     function exportToCSV() {
-        const addresses = addressInput.value.split('\n').filter(address => address.trim() !== '' && address.startsWith('0x'));
-        let csvContent = "data:text/csv; charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LXP-L排名,POH状态\n";
-
-        addresses.forEach(function(address, index) {
-            const lxp = document.getElementById('lxp-' + index).textContent;
-            const lxpl = document.getElementById('lxpl-' + index).textContent;
-            const rank = document.getElementById('rank-' + index).textContent;
-            const poh = document.getElementById('poh-' + index).textContent;
-            csvContent += (index + 1) + "," + address + "," + lxp + "," + lxpl + "," + rank + "," + poh + "\n";
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "wallet_balances.csv");
-        document.body.appendChild(link); // Required for FF
-
-        link.click();
+      const addresses = addressInput.value.split('\n').filter(a => a.trim() !== '' && a.startsWith('0x'));
+      let csvContent = "data:text/csv; charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LXP-L排名,LAM余额,等级,POH状态\n";
+      addresses.forEach((address, index) => {
+        const lxp  = document.getElementById('lxp-' + index).textContent;
+        const lxpl = document.getElementById('lxpl-' + index).textContent;
+        const rank = document.getElementById('rank-' + index).textContent;
+        const e158 = document.getElementById('e158-' + index).textContent;
+        const tier = document.getElementById('tier-' + index).textContent;
+        const poh  = document.getElementById('poh-' + index).textContent;
+        csvContent += `${index + 1},${address},${lxp},${lxpl},${rank},${e158},${tier},${poh}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', 'wallet_balances.csv');
+      document.body.appendChild(link);
+      link.click();
     }
-</script>
+  </script>
 </body>
 </html>
