@@ -26,7 +26,7 @@
       <p>支持Linea两种不同的查询模式，更快更安全！</p>
       <p>前后端源代码已开源，任何人都可以自己部署：<a href="https://github.com/lyen1688/linea_bot/" target="_blank">github</a></p>
       <p>重要提示：我们不会收集任何用户信息，更不会去举报女巫。你可以不用，但别诋毁。</p>
-      <p class="text-green">最新更新：已经更新了LAM等级查询，现在可以查询LAM余额对应的等级了！</p>
+      <p class="text-green">最新更新：支持查询最新的LXP-L，支持查询LAM余额和对应的等级！</p>
       <p class="author-info">
         by：老叶1999.eth &nbsp;&nbsp;作者推特：<a href="https://twitter.com/1999_eth" target="_blank">https://twitter.com/1999_eth</a>
       </p>    
@@ -170,7 +170,7 @@
       resultTable.className = 'table table-striped';
       resultTable.innerHTML =
         '<thead><tr>' +
-        '<th>编号</th><th>钱包地址</th><th>LXP</th><th>LXP-L</th><th>LXP-L排名</th><th>LAM余额</th><th>等级</th><th>POH状态</th>' +
+        '<th>编号</th><th>钱包地址</th><th>LXP</th><th>LXP-L</th><th>LAM余额</th><th>等级</th><th>POH状态</th>' +
         '</tr></thead><tbody></tbody>';
 
       const tbody = resultTable.querySelector('tbody');
@@ -184,14 +184,12 @@
 
         const lxpTd = row.insertCell(2); lxpTd.id   = 'lxp-' + index;
         const lxplTd= row.insertCell(3); lxplTd.id  = 'lxpl-' + index;
-        const rankTd= row.insertCell(4); rankTd.id  = 'rank-' + index;
-        const e158Td= row.insertCell(5); e158Td.id  = 'e158-' + index; // LAM余额列
-        const tierTd= row.insertCell(6); tierTd.id  = 'tier-' + index; // 等级列
-        const pohTd = row.insertCell(7); pohTd.id   = 'poh-' + index;
+        const e158Td= row.insertCell(4); e158Td.id  = 'e158-' + index; // LAM余额列
+        const tierTd= row.insertCell(5); tierTd.id  = 'tier-' + index; // 等级列
+        const pohTd = row.insertCell(6); pohTd.id   = 'poh-' + index;
 
         lxpTd.textContent = '正在查询...';
         lxplTd.textContent = '正在查询...';
-        rankTd.textContent = '正在查询...';
         e158Td.textContent = '正在查询...';
         tierTd.textContent = '正在查询...';
         pohTd.textContent = '正在查询...';
@@ -338,35 +336,24 @@
       }
     }
 
-    // 单地址其他数据查询（排名、POH）
+    // 单地址其他数据查询（POH）
     async function fetchOtherAddressData(address, index) {
       const lower = address.toLowerCase();
 
-      // 1) 排名（从API获取）
-      try {
-        const resp = await fetch(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/linea/getUserPointsSearch?user=${lower}`);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        const rank = (data && data[0] && data[0].rank_xp) || 0;
-        document.getElementById('rank-' + index).textContent = rank;
-      } catch(e) {
-        document.getElementById('rank-' + index).textContent = '0';
-      }
-
-      // 2) POH
+      // POH查询
       try {
         const resp = await fetch(`https://linea-xp-poh-api.linea.build/poh/${lower}`);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         const ok = !!data.poh;
         const td = document.getElementById('poh-' + index);
-        td.textContent = ok ? '正常' : '异常';
-        td.className = ok ? 'text-green' : 'text-red';
+        td.textContent = ok ? '正常' : '无';
+        td.className = ok ? 'text-green' : '';
         if (ok) totalSummary.pohNormal += 1; else totalSummary.pohAbnormal += 1;
       } catch(e) {
         const td = document.getElementById('poh-' + index);
-        td.textContent = '异常';
-        td.className = 'text-red';
+        td.textContent = '无';
+        td.className = '';
         totalSummary.pohAbnormal += 1;
       }
 
@@ -475,18 +462,16 @@
         data.forEach((result, i) => {
           const actualIndex = startIndex + i;
 
-          const rankTd = document.getElementById('rank-' + actualIndex);
           const pohTd  = document.getElementById('poh-' + actualIndex);
 
           if (result.error) {
-            if (rankTd) rankTd.textContent = 'Error';
-            if (pohTd)  { pohTd.textContent = 'Error'; pohTd.className = ''; }
+            if (pohTd)  { pohTd.textContent = '无'; pohTd.className = ''; }
+            totalSummary.pohAbnormal += 1;
           } else {
-            if (rankTd) rankTd.textContent = result.rank;
             if (pohTd)  {
-              pohTd.textContent = result.poh;
               const isOk = result.poh === '正常';
-              pohTd.className = isOk ? 'text-green' : 'text-red';
+              pohTd.textContent = isOk ? '正常' : '无';
+              pohTd.className = isOk ? 'text-green' : '';
               if (isOk) totalSummary.pohNormal += 1; else totalSummary.pohAbnormal += 1;
             }
           }
@@ -510,7 +495,7 @@
         LXP：<span class="text-green">${totalSummary.lxpTotal.toFixed(2)}</span> 分 |
         LXP-L：<span class="text-green">${totalSummary.lxplTotal}</span> 分 |
         POH正常：<span class="text-green">${totalSummary.pohNormal}</span> 个 |
-        POH异常：<span class="text-red">${totalSummary.pohAbnormal}</span> 个
+        暂无POH：${totalSummary.pohAbnormal} 个
       `;
     }
 
@@ -528,15 +513,14 @@
 
     function exportToCSV() {
       const addresses = addressInput.value.split('\n').filter(a => a.trim() !== '' && a.startsWith('0x'));
-      let csvContent = "data:text/csv; charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LXP-L排名,LAM余额,等级,POH状态\n";
+      let csvContent = "data:text/csv; charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LAM余额,等级,POH状态\n";
       addresses.forEach((address, index) => {
         const lxp  = document.getElementById('lxp-' + index).textContent;
         const lxpl = document.getElementById('lxpl-' + index).textContent;
-        const rank = document.getElementById('rank-' + index).textContent;
         const e158 = document.getElementById('e158-' + index).textContent;
         const tier = document.getElementById('tier-' + index).textContent;
         const poh  = document.getElementById('poh-' + index).textContent;
-        csvContent += `${index + 1},${address},${lxp},${lxpl},${rank},${e158},${tier},${poh}\n`;
+        csvContent += `${index + 1},${address},${lxp},${lxpl},${e158},${tier},${poh}\n`;
       });
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
