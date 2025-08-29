@@ -121,13 +121,54 @@
       return 15;
     }
 
+    // 计算预估空投：LXP * LAM（18位精度）* 1000000000
+    function calculateAirdrop(index) {
+      const lxpCell = document.getElementById('lxp-' + index);
+      const e158Cell = document.getElementById('e158-' + index);
+      const airdropCell = document.getElementById('airdrop-' + index);
+      
+      if (!lxpCell || !e158Cell || !airdropCell) return;
+      
+      const lxpText = lxpCell.textContent;
+      const e158Text = e158Cell.textContent;
+      
+      // 检查是否都是有效数字
+      if (lxpText === 'Error' || e158Text === 'Error' || 
+          lxpText === '正在查询...' || e158Text === '正在查询...' ||
+          e158Text === '0' || !e158Text) {
+        airdropCell.textContent = '-';
+        return;
+      }
+      
+      const lxp = parseFloat(lxpText) || 0;
+      const lamDisplay = parseFloat(e158Text) || 0; // 这是12位精度的显示值
+      
+      if (lxp <= 0 || lamDisplay <= 0) {
+        airdropCell.textContent = '-';
+        return;
+      }
+      
+      // 将显示值转换回18位精度：lamDisplay / 10^12 * 10^18 = lamDisplay * 10^6
+      const lamFull = lamDisplay * Math.pow(10, 6);
+      const lamOriginal = lamFull / Math.pow(10, 18); // 转换为原始小数值
+      
+      // 计算：LXP * LAM（18位精度）* 1000000000
+      const airdrop = lxp * lamOriginal * 1000000000;
+      
+      airdropCell.textContent = airdrop.toFixed(2);
+      
+      // 累计到总计中
+      totalSummary.airdropTotal += airdrop;
+    }
+
     // 累计信息
     let totalSummary = {
       walletCount: 0,
       lxpTotal: 0,
       lxplTotal: 0,
       pohNormal: 0,
-      pohAbnormal: 0
+      pohAbnormal: 0,
+      airdropTotal: 0
     };
 
     queryBtn.addEventListener('click', function () {
@@ -143,7 +184,8 @@
         lxpTotal: 0,
         lxplTotal: 0,
         pohNormal: 0,
-        pohAbnormal: 0
+        pohAbnormal: 0,
+        airdropTotal: 0
       };
 
       // 清空结果
@@ -170,7 +212,7 @@
       resultTable.className = 'table table-striped';
       resultTable.innerHTML =
         '<thead><tr>' +
-        '<th>编号</th><th>钱包地址</th><th>LXP</th><th>LXP-L</th><th>LAM余额</th><th>等级</th><th>POH状态</th>' +
+        '<th>编号</th><th>钱包地址</th><th>LXP</th><th>LXP-L</th><th>LAM余额</th><th>等级</th><th>POH状态</th><th>预估空投</th>' +
         '</tr></thead><tbody></tbody>';
 
       const tbody = resultTable.querySelector('tbody');
@@ -187,11 +229,13 @@
         const e158Td= row.insertCell(4); e158Td.id  = 'e158-' + index; // LAM余额列
         const tierTd= row.insertCell(5); tierTd.id  = 'tier-' + index; // 等级列
         const pohTd = row.insertCell(6); pohTd.id   = 'poh-' + index;
+        const airdropTd= row.insertCell(7); airdropTd.id = 'airdrop-' + index; // 预估空投列
 
         lxpTd.textContent = '正在查询...';
         lxplTd.textContent = '正在查询...';
         e158Td.textContent = '正在查询...';
         tierTd.textContent = '正在查询...';
+        airdropTd.textContent = '正在查询...';
         pohTd.textContent = '正在查询...';
       });
 
@@ -268,8 +312,13 @@
             const intVal = Math.floor(val);
             cell.textContent = intVal.toString();
             totalSummary.lxpTotal += intVal;
+            // 计算预估空投
+            calculateAirdrop(actualIndex);
           } catch {
             cell.textContent = 'Error';
+            // LXP错误时，预估空投也设为错误
+            const airdropCell = document.getElementById('airdrop-' + actualIndex);
+            if (airdropCell) airdropCell.textContent = '-';
           }
         });
         updateTotalSummary();
@@ -412,14 +461,22 @@
                 const tier = getLAMTier(lamValue);
                 tierCell.textContent = tier ? `Tier${tier}` : '';
               }
-            } else {
-              cell.textContent = '0';
+              // 计算预估空投
+              calculateAirdrop(actualIndex);
+                          } else {
+                cell.textContent = '0';
+                if (tierCell) tierCell.textContent = '';
+                // LAM为0时，预估空投显示为-
+                const airdropCell = document.getElementById('airdrop-' + actualIndex);
+                if (airdropCell) airdropCell.textContent = '-';
+              }
+                      } catch {
+              cell.textContent = 'Error';
               if (tierCell) tierCell.textContent = '';
+              // LAM错误时，预估空投也设为错误
+              const airdropCell = document.getElementById('airdrop-' + actualIndex);
+              if (airdropCell) airdropCell.textContent = '-';
             }
-          } catch {
-            cell.textContent = 'Error';
-            if (tierCell) tierCell.textContent = '';
-          }
         });
       } catch (e) {
         // 整批失败则把批内单元格标注为 Error
@@ -497,7 +554,8 @@
         LXP：<span class="text-green">${totalSummary.lxpTotal}</span> 分 |
         LXP-L：<span class="text-green">${totalSummary.lxplTotal}</span> 分 |
         POH正常：<span class="text-green">${totalSummary.pohNormal}</span> 个 |
-        暂无POH：${totalSummary.pohAbnormal} 个
+        暂无POH：${totalSummary.pohAbnormal} 个 |
+        预估空投：<span class="text-green">${totalSummary.airdropTotal.toFixed(2)}</span>
       `;
     }
 
@@ -515,14 +573,15 @@
 
     function exportToCSV() {
       const addresses = addressInput.value.split('\n').filter(a => a.trim() !== '' && a.startsWith('0x'));
-      let csvContent = "data:text/csv; charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LAM余额,等级,POH状态\n";
+      let csvContent = "data:text/csv; charset=utf-8," + "编号,钱包地址,LXP,LXP-L,LAM余额,等级,POH状态,预估空投\n";
       addresses.forEach((address, index) => {
         const lxp  = document.getElementById('lxp-' + index).textContent;
         const lxpl = document.getElementById('lxpl-' + index).textContent;
         const e158 = document.getElementById('e158-' + index).textContent;
         const tier = document.getElementById('tier-' + index).textContent;
         const poh  = document.getElementById('poh-' + index).textContent;
-        csvContent += `${index + 1},${address},${lxp},${lxpl},${e158},${tier},${poh}\n`;
+        const airdrop = document.getElementById('airdrop-' + index).textContent;
+        csvContent += `${index + 1},${address},${lxp},${lxpl},${e158},${tier},${poh},${airdrop}\n`;
       });
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
