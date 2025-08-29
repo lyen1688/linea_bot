@@ -264,8 +264,10 @@
           try {
             const [raw] = ifaceERC20.decodeFunctionResult('balanceOf', r.returnData);
             const val = Number(ethers.utils.formatUnits(raw, DECIMALS_LXP));
-            cell.textContent = isFinite(val) ? val.toFixed(2) : '0.00';
-            totalSummary.lxpTotal += isFinite(val) ? val : 0;
+            // LXP显示为整数
+            const intVal = Math.floor(val);
+            cell.textContent = intVal.toString();
+            totalSummary.lxpTotal += intVal;
           } catch {
             cell.textContent = 'Error';
           }
@@ -492,7 +494,7 @@
       if (!el) return;
       el.innerHTML = `
         钱包数量：<span class="text-green">${totalSummary.walletCount}</span> 个 |
-        LXP：<span class="text-green">${totalSummary.lxpTotal.toFixed(2)}</span> 分 |
+        LXP：<span class="text-green">${totalSummary.lxpTotal}</span> 分 |
         LXP-L：<span class="text-green">${totalSummary.lxplTotal}</span> 分 |
         POH正常：<span class="text-green">${totalSummary.pohNormal}</span> 个 |
         暂无POH：${totalSummary.pohAbnormal} 个
