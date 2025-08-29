@@ -77,6 +77,8 @@
     const DECIMALS_E158 = 18; // 假设18位，如需严谨可再加一次性查询decimals
     const TOKEN_LXP = '0xd83af4fbd77f3ab65c3b1dc4b38d7e67aecf599a'; // LXP代币
     const DECIMALS_LXP = 18;
+    const TOKEN_LXPL = '0xbc8f4663470229fd4ca3686a24792d93dd800216'; // LXP-L代币
+    const DECIMALS_LXPL = 18;
 
     // ethers Interface（只放需要的函数签名）
     const ifaceERC20 = new ethers.utils.Interface([
@@ -210,12 +212,13 @@
       const endIndex = Math.min(startIndex + batchSize, addresses.length);
       const batch = addresses.slice(startIndex, endIndex);
 
-      // 并发：LXP批量查询 + LAM批量查询 + 其他单个查询
+      // 并发：LXP批量查询 + LXP-L批量查询 + LAM批量查询 + 其他单个查询
       const lxpBatchReq = fetchLXPBalancesByMulticall(batch, startIndex);
+      const lxplBatchReq = fetchLXPLBalancesByMulticall(batch, startIndex);
       const e158BatchReq = fetchE158BalancesByMulticall(batch, startIndex);
       const otherRequestsPerAddress = batch.map((address, i) => fetchOtherAddressData(address, startIndex + i));
 
-      await Promise.all([lxpBatchReq, e158BatchReq, ...otherRequestsPerAddress]);
+      await Promise.all([lxpBatchReq, lxplBatchReq, e158BatchReq, ...otherRequestsPerAddress]);
 
       if (endIndex < addresses.length) {
         processBatch(addresses, endIndex, batchSize);
@@ -279,22 +282,74 @@
       }
     }
 
-    // 单地址其他数据查询（LXP-L、排名、POH）
+    // 新增：使用 Multicall3 批量查询本批地址的 LXP-L 余额
+    async function fetchLXPLBalancesByMulticall(batchAddresses, startIndex) {
+      try {
+        // 构造 calls: 对LXP-L代币合约的 balanceOf(address)
+        const calls = batchAddresses.map(addr => ({
+          target: TOKEN_LXPL,
+          allowFailure: true,
+          callData: ifaceERC20.encodeFunctionData('balanceOf', [addr])
+        }));
+
+        const data = ifaceMC3.encodeFunctionData('aggregate3', [calls]);
+
+        const resp = await fetch(RPC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'eth_call',
+            params: [{ to: MULTICALL3, data }, 'latest'],
+            id: 890,
+            jsonrpc: '2.0'
+          })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const { result } = await resp.json();
+
+        const decoded = ifaceMC3.decodeFunctionResult('aggregate3', result)[0]; // returnData[]
+        decoded.forEach((r, i) => {
+          const actualIndex = startIndex + i;
+          const lxplCell = document.getElementById('lxpl-' + actualIndex);
+          if (!lxplCell) return;
+
+          if (!r.success) {
+            lxplCell.textContent = 'Error';
+            return;
+          }
+          try {
+            const [raw] = ifaceERC20.decodeFunctionResult('balanceOf', r.returnData);
+            const val = Number(ethers.utils.formatUnits(raw, DECIMALS_LXPL));
+            // LXP-L显示为整数
+            const intVal = Math.floor(val);
+            lxplCell.textContent = intVal.toString();
+            totalSummary.lxplTotal += intVal;
+          } catch {
+            lxplCell.textContent = 'Error';
+          }
+        });
+        updateTotalSummary();
+      } catch (e) {
+        // 整批失败则把批内单元格标注为 Error
+        batchAddresses.forEach((_, i) => {
+          const cell = document.getElementById('lxpl-' + (startIndex + i));
+          if (cell) cell.textContent = 'Error';
+        });
+      }
+    }
+
+    // 单地址其他数据查询（排名、POH）
     async function fetchOtherAddressData(address, index) {
       const lower = address.toLowerCase();
 
-      // 1) LXP-L & 排名
+      // 1) 排名（从API获取）
       try {
         const resp = await fetch(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/linea/getUserPointsSearch?user=${lower}`);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        const lxpl = (data && data[0] && data[0].xp) || 0;
         const rank = (data && data[0] && data[0].rank_xp) || 0;
-        document.getElementById('lxpl-' + index).textContent = lxpl;
         document.getElementById('rank-' + index).textContent = rank;
-        totalSummary.lxplTotal += Number(lxpl) || 0;
       } catch(e) {
-        document.getElementById('lxpl-' + index).textContent = '0';
         document.getElementById('rank-' + index).textContent = '0';
       }
 
@@ -391,10 +446,11 @@
       const endIndex = Math.min(startIndex + batchSize, addresses.length);
       const batch = addresses.slice(startIndex, endIndex);
 
-      // 代理接口 + 批量 LXP + 批量 LAM
+      // 代理接口 + 批量 LXP + 批量 LXP-L + 批量 LAM
       await Promise.all([
         proxyQuery(batch, startIndex),
         fetchLXPBalancesByMulticall(batch, startIndex),
+        fetchLXPLBalancesByMulticall(batch, startIndex),
         fetchE158BalancesByMulticall(batch, startIndex)
       ]);
 
@@ -419,16 +475,13 @@
         data.forEach((result, i) => {
           const actualIndex = startIndex + i;
 
-          const lxplTd = document.getElementById('lxpl-' + actualIndex);
           const rankTd = document.getElementById('rank-' + actualIndex);
           const pohTd  = document.getElementById('poh-' + actualIndex);
 
           if (result.error) {
-            if (lxplTd) lxplTd.textContent = 'Error';
             if (rankTd) rankTd.textContent = 'Error';
             if (pohTd)  { pohTd.textContent = 'Error'; pohTd.className = ''; }
           } else {
-            if (lxplTd) { lxplTd.textContent = result.lxp_l; totalSummary.lxplTotal += Number(result.lxp_l) || 0; }
             if (rankTd) rankTd.textContent = result.rank;
             if (pohTd)  {
               pohTd.textContent = result.poh;
